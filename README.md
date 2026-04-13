@@ -79,6 +79,15 @@ flowchart TD
     G --> H[📄 PDF Export: Mustache injects data into LaTeX]
     H --> I[☁️ TeXLive.net compile]
     I --> J[✅ PDF downloaded]
+
+    classDef admin fill:#E0F2FE,stroke:#0284C7,color:#0C4A6E,stroke-width:1px;
+    classDef process fill:#EEF2FF,stroke:#4F46E5,color:#1E1B4B,stroke-width:1px;
+    classDef storage fill:#ECFDF5,stroke:#10B981,color:#064E3B,stroke-width:1px;
+    classDef output fill:#FEF3C7,stroke:#F59E0B,color:#78350F,stroke-width:1px;
+    class A admin;
+    class B,C,D,E,G,H process;
+    class F,I storage;
+    class J output;
 ```
 
 ### Request/Service Flow
@@ -109,18 +118,26 @@ sequenceDiagram
 ## 🛠️ Tech Stack
 
 <div align="center">
-  <img src="https://skillicons.dev/icons?i=react,ts,vite,tailwind,nodejs,express,mongodb" alt="Tech stack icons" />
+
+  <img src="https://skillicons.dev/icons?i=react,ts,vite,tailwind,nodejs,express,mongodb,postman,git,github" alt="Tech stack icons" />
 </div>
 
-| Layer       | Technology                                |
-|-------------|-------------------------------------------|
-| Frontend    | React 18 + TypeScript + Vite              |
-| Styling     | Tailwind CSS + Framer Motion              |
-| Backend     | Node.js + Express 5 + TypeScript          |
-| Database    | MongoDB Atlas + Mongoose                  |
-| Auth        | JWT + bcryptjs                            |
-| Templating  | Mustache.js (`[[ ]]` tag syntax)          |
-| PDF Engine  | TeXLive.net Remote Compilation API        |
+<div align="center">
+
+| 🧱 Layer | ⚙️ Technologies | 🎯 Why Used |
+|---|---|---|
+| 🎨 Frontend | React 18 + TypeScript + Vite | Fast DX, component architecture, type safety |
+| 🪄 Styling | Tailwind CSS + Framer Motion | Utility-first design + smooth animations |
+| 🚀 Backend | Node.js + Express 5 + TypeScript | Scalable REST API with typed server code |
+| 🗄️ Database | MongoDB Atlas + Mongoose | Flexible schema for dynamic resume/template data |
+| 🔐 Auth | JWT + bcryptjs | Secure login and role-based access |
+| 🧩 Templating | Mustache.js (`[[ ]]` tag syntax) | Clean placeholder-based rendering |
+| 📄 PDF Engine | TeXLive.net Remote Compilation API | High-quality LaTeX resume output |
+
+</div>
+
+> 🔗 **Quick Links:** [React](https://react.dev) • [TypeScript](https://www.typescriptlang.org) • [Vite](https://vite.dev) • [TailwindCSS](https://tailwindcss.com) • [Express](https://expressjs.com) • [MongoDB](https://www.mongodb.com) • [TeXLive](https://texlive.net)
+
 
 ---
 
@@ -166,24 +183,29 @@ ResumeBuilder/
 <a id="setup--installation"></a>
 ## ⚙️ Setup & Installation
 
-### Prerequisites
+> ✅ Follow this in order to run the full stack locally without issues.
+
+### 🧰 Prerequisites
 - Node.js v18+
 - MongoDB Atlas account (or local MongoDB)
 - Git
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/your-username/resume-forge.git
-cd resume-forge
-```
-
-> If you are using this repo directly:
+### 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/Ankitarai27/ResumeBuilder.git
 cd ResumeBuilder
 ```
 
-### 2. Backend Setup
+<details>
+<summary>Alternative example clone path</summary>
+
+```bash
+git clone https://github.com/your-username/resume-forge.git
+cd resume-forge
+```
+</details>
+
+### 2️⃣ Backend Setup
 ```bash
 cd backend
 npm install
@@ -201,7 +223,7 @@ Start the backend:
 npm run dev
 ```
 
-### 3. Frontend Setup
+### 3️⃣ Frontend Setup
 ```bash
 cd ../frontend
 npm install
@@ -209,6 +231,12 @@ npm run dev
 ```
 
 The app will be available at **http://localhost:5173**
+
+
+### 🌐 Deployment Quick Links
+- Frontend (Vercel): https://vercel.com/new
+- Backend (Render): https://dashboard.render.com/
+- MongoDB Atlas: https://cloud.mongodb.com/
 
 ### Local Runtime Flow
 
@@ -225,17 +253,17 @@ flowchart LR
 <a id="template-system"></a>
 ## 📐 Template System
 
-### How to Write a Compatible Template
+### 🧾 How to Write a Compatible Template
 
 Use `[[ variableName ]]` for simple fields and `[[ #sectionName ]]` / `[[ /sectionName ]]` for list sections.
 
-**Simple fields:**
+**🔹 Simple fields:**
 ```latex
 \textbf{[[ firstName ]]} [[ lastName ]]
 \href{mailto:[[ email ]]}{[[ email ]]} | [[ phone ]]
 ```
 
-**List sections:**
+**🔹 List sections:**
 ```latex
 [[ #experience ]]
 \textbf{[[ company ]]} | [[ role ]]
@@ -244,7 +272,7 @@ Use `[[ variableName ]]` for simple fields and `[[ #sectionName ]]` / `[[ /secti
 [[ /experience ]]
 ```
 
-### Standard Field Aliases
+### 🧠 Standard Field Aliases
 
 | Template Variable    | Maps To                    |
 |----------------------|----------------------------|
@@ -254,7 +282,8 @@ Use `[[ variableName ]]` for simple fields and `[[ #sectionName ]]` / `[[ /secti
 | `objective`          | Professional Summary       |
 | `fullName`           | Full Name field            |
 
-### Supported Sections
+
+### 🧩 Supported Sections
 
 | Block                    | Builder Tab       |
 |--------------------------|-------------------|
@@ -275,6 +304,12 @@ flowchart TD
     T2 --> T3[Extract fields + sections]
     T3 --> T4[Store detectedFields in TemplateModel]
     T4 --> T5[Builder conditionally renders tabs/inputs]
+    classDef source fill:#F0F9FF,stroke:#0369A1,color:#0C4A6E,stroke-width:1px;
+    classDef parse fill:#F5F3FF,stroke:#7C3AED,color:#4C1D95,stroke-width:1px;
+    classDef saved fill:#ECFDF5,stroke:#059669,color:#065F46,stroke-width:1px;
+    class T1 source;
+    class T2,T3 parse;
+    class T4,T5 saved;
 ```
 
 ---
