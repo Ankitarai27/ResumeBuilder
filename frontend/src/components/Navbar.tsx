@@ -13,6 +13,7 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-6 py-3 sm:py-4">
+
       <div className="max-w-7xl mx-auto glass flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-8 py-3 bg-white/10 border-white/20">
         <Link to="/" className="flex items-center gap-2 group">
           <div className="bg-blue-600 p-2 rounded-lg group-hover:rotate-12 transition-transform">
@@ -24,27 +25,28 @@ const Navbar = () => {
         </Link>
 
         <div className="flex flex-wrap items-center gap-3 sm:gap-6 font-medium text-slate-600 w-full sm:w-auto sm:justify-end">
+
           {user ? (
             <>
               {user.role === 'ADMIN' && (
-                <Link to="/admin" className="hover:text-blue-600 flex items-center gap-1">
+                <Link to="/admin" className="hover:text-blue-600 flex items-center gap-1 text-sm sm:text-base">
                   <ShieldCheck size={18} /> Admin
                 </Link>
               )}
-              <Link to="/dashboard" className="hover:text-blue-600 flex items-center gap-1">
+              <Link to="/dashboard" className="hover:text-blue-600 flex items-center gap-1 text-sm sm:text-base">
                 <User size={18} /> Dashboard
               </Link>
               <button 
                 onClick={handleLogout}
-                className="flex items-center gap-1 bg-red-50 text-red-600 px-4 py-2 rounded-xl hover:bg-red-100 transition-colors"
+                className="flex items-center gap-1 bg-red-50 text-red-600 px-3 sm:px-4 py-2 rounded-xl hover:bg-red-100 transition-colors text-sm sm:text-base"
               >
                 <LogOut size={18} /> Logout
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="hover:text-blue-600">Login</Link>
-              <Link to="/register" className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+              <Link to="/login" className="hover:text-blue-600 text-sm sm:text-base">Login</Link>
+              <Link to="/register" className="bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 text-sm sm:text-base">
                 Get Started
               </Link>
             </>
