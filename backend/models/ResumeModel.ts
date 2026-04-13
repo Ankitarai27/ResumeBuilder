@@ -31,6 +31,10 @@ export interface IResume extends Document {
     name: string;
     tech: string;
     link?: string;
+    demoLink?: string;
+    githubLink?: string;
+    timeline?: string;
+    points?: string[];
     description: string;
   }>;
   certifications: Array<{
@@ -39,6 +43,37 @@ export interface IResume extends Document {
     date: string;
   }>;
   skills: string[];
+  links?: Array<{
+    label: string;
+    url: string;
+    text?: string;
+  }>;
+  coursework?: Array<{
+    title: string;
+    items: string[];
+  }>;
+  training?: Array<{
+    title: string;
+    location?: string;
+    description?: string;
+  }>;
+  publications?: Array<{
+    title: string;
+    description?: string;
+  }>;
+  achievements?: Array<{
+    title: string;
+    points: string[];
+  }>;
+  codingProfiles?: Array<{
+    title: string;
+    url: string;
+    details?: string;
+  }>;
+  extracurricularActivities?: Array<{
+    title: string;
+    description?: string;
+  }>;
   customData?: any;
   createdAt: Date;
   updatedAt: Date;
@@ -81,6 +116,10 @@ const ResumeSchema: Schema = new Schema(
         name: { type: String },
         tech: { type: String },
         link: { type: String },
+        demoLink: { type: String },
+        githubLink: { type: String },
+        timeline: { type: String },
+        points: [{ type: String }],
         description: { type: String }
       }
     ],
@@ -92,6 +131,51 @@ const ResumeSchema: Schema = new Schema(
       }
     ],
     skills: [{ type: String }],
+    links: [
+      {
+        label: { type: String },
+        url: { type: String },
+        text: { type: String }
+      }
+    ],
+    coursework: [
+      {
+        title: { type: String },
+        items: [{ type: String }]
+      }
+    ],
+    training: [
+      {
+        title: { type: String },
+        location: { type: String },
+        description: { type: String }
+      }
+    ],
+    publications: [
+      {
+        title: { type: String },
+        description: { type: String }
+      }
+    ],
+    achievements: [
+      {
+        title: { type: String },
+        points: [{ type: String }]
+      }
+    ],
+    codingProfiles: [
+      {
+        title: { type: String },
+        url: { type: String },
+        details: { type: String }
+      }
+    ],
+    extracurricularActivities: [
+      {
+        title: { type: String },
+        description: { type: String }
+      }
+    ],
     customData: { type: Schema.Types.Mixed, default: {} },
   },
   { timestamps: true, strict: false }

@@ -52,7 +52,7 @@ const UniversalAutoRenderer = ({ data, fields, accent }: { data: any; fields: st
     (hasBlock(fields, 'coursework') && hasBlock(fields, 'experience'));
 
   const leftOrder  = ['objective', 'education', 'links', 'coursework', 'skills'];
-  const rightOrder = ['experience', 'projects', 'training', 'publications', 'certifications'];
+  const rightOrder = ['experience', 'projects', 'achievements', 'codingProfiles', 'training', 'publications', 'extracurricularActivities', 'certifications'];
 
   leftOrder.forEach(s  => { if (hasBlock(fields, s))  leftSections.push(s); });
   rightOrder.forEach(s => { if (hasBlock(fields, s)) rightSections.push(s); });
@@ -90,8 +90,7 @@ const UniversalAutoRenderer = ({ data, fields, accent }: { data: any; fields: st
             <SectionTitle title="Links" accent={accent} />
             {(data.links || []).map((lnk: any, i: number) => (
               <div key={i} style={{ fontSize: 11, marginBottom: 4 }}>
-                <span style={{ fontWeight: 700 }}>{lnk.label}</span>
-                {lnk.label ? '://' : ''}
+                <span style={{ fontWeight: 700 }}>{lnk.label || 'Link'}: </span>
                 <span style={{ color: accent }}>{lnk.text || lnk.url}</span>
               </div>
             ))}
@@ -142,6 +141,11 @@ const UniversalAutoRenderer = ({ data, fields, accent }: { data: any; fields: st
                 {exp.description && (
                   <p style={{ fontSize: 11, color: '#444', marginTop: 4, lineHeight: 1.5, whiteSpace: 'pre-line' }}>{exp.description}</p>
                 )}
+                {(exp.points || []).length > 0 && (
+                  <ul style={{ marginTop: 4, paddingLeft: 16, fontSize: 11, color: '#444' }}>
+                    {(exp.points || []).map((pt: string, j: number) => <li key={j}>{pt}</li>)}
+                  </ul>
+                )}
               </div>
             ))}
             {(!data.experience || data.experience.length === 0) && <Placeholder text="Add experience" />}
@@ -156,12 +160,66 @@ const UniversalAutoRenderer = ({ data, fields, accent }: { data: any; fields: st
               <div key={i} style={{ marginBottom: 12 }}>
                 <div style={{ fontWeight: 800, fontSize: 12 }}>{proj.title || proj.name || <Placeholder text="Project" />}</div>
                 <div style={{ fontSize: 10, color: '#777' }}>
-                  {proj.duration ? `${proj.duration} | ` : ''}{proj.organization || proj.tech || ''}
+                  {(proj.timeline || proj.duration) ? `${proj.timeline || proj.duration} | ` : ''}{proj.organization || proj.tech || ''}
                 </div>
                 {proj.description && <p style={{ fontSize: 11, color: '#444', marginTop: 3, lineHeight: 1.5 }}>{proj.description}</p>}
+                {(proj.points || []).length > 0 && (
+                  <ul style={{ marginTop: 4, paddingLeft: 16, fontSize: 11, color: '#444' }}>
+                    {(proj.points || []).map((pt: string, j: number) => <li key={j}>{pt}</li>)}
+                  </ul>
+                )}
+                <div style={{ fontSize: 10, marginTop: 4, color: '#555' }}>
+                  {proj.githubLink && <span>GitHub: {proj.githubLink} </span>}
+                  {proj.demoLink && <span>Demo: {proj.demoLink}</span>}
+                </div>
               </div>
             ))}
             {(!data.projects || data.projects.length === 0) && <Placeholder text="Add projects" />}
+          </div>
+        );
+
+      case 'achievements':
+        return (
+          <div key="achievements" style={{ marginBottom: 16 }}>
+            <SectionTitle title="Achievements" accent={accent} />
+            {(data.achievements || []).map((ach: any, i: number) => (
+              <div key={i} style={{ marginBottom: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: 12 }}>{ach.title}</div>
+                <ul style={{ margin: '4px 0 0', paddingLeft: 16, fontSize: 11, color: '#444' }}>
+                  {(ach.points || []).map((pt: string, j: number) => <li key={j}>{pt}</li>)}
+                </ul>
+              </div>
+            ))}
+            {(!data.achievements || data.achievements.length === 0) && <Placeholder text="Add achievements (optional)" />}
+          </div>
+        );
+
+      case 'codingProfiles':
+        return (
+          <div key="codingProfiles" style={{ marginBottom: 16 }}>
+            <SectionTitle title="Coding Profiles" accent={accent} />
+            {(data.codingProfiles || []).map((cp: any, i: number) => (
+              <div key={i} style={{ marginBottom: 8 }}>
+                <div style={{ fontWeight: 700, fontSize: 12 }}>{cp.title}</div>
+                {cp.url && <div style={{ fontSize: 10, color: accent }}>{cp.url}</div>}
+                {cp.details && <div style={{ fontSize: 11, color: '#444' }}>{cp.details}</div>}
+              </div>
+            ))}
+            {(!data.codingProfiles || data.codingProfiles.length === 0) && <Placeholder text="Add coding profiles (optional)" />}
+          </div>
+        );
+
+      case 'extracurricularActivities':
+        return (
+          <div key="extracurricularActivities" style={{ marginBottom: 16 }}>
+            <SectionTitle title="Extra Curricular Activities" accent={accent} />
+            {(data.extracurricularActivities || []).map((ex: any, i: number) => (
+              <div key={i} style={{ marginBottom: 8 }}>
+                <div style={{ fontWeight: 700, fontSize: 12 }}>{ex.title}</div>
+                {ex.description && <div style={{ fontSize: 11, color: '#444' }}>{ex.description}</div>}
+              </div>
+            ))}
+            {(!data.extracurricularActivities || data.extracurricularActivities.length === 0) && <Placeholder text="Add activities (optional)" />}
           </div>
         );
 

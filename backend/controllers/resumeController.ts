@@ -100,7 +100,10 @@ export const generateLatexPDF = async (req: Request, res: Response) => {
 
 export const createResume = async (req: Request, res: Response) => {
   try {
-    const { templateId, title, personalInfo, experience, education, projects, certifications, skills } = req.body;
+    const {
+      templateId, title, personalInfo, experience, education, projects, certifications, skills,
+      links, coursework, training, publications, achievements, codingProfiles, extracurricularActivities, customData
+    } = req.body;
     
     const resume = await Resume.create({
       userId: (req as any).user._id,
@@ -111,7 +114,15 @@ export const createResume = async (req: Request, res: Response) => {
       education,
       projects,
       certifications,
-      skills
+      skills,
+      links,
+      coursework,
+      training,
+      publications,
+      achievements,
+      codingProfiles,
+      extracurricularActivities,
+      customData
     });
 
     res.status(201).json(resume);
@@ -146,18 +157,30 @@ export const getResumeById = async (req: Request, res: Response) => {
 
 export const updateResume = async (req: Request, res: Response) => {
   try {
-    const { title, personalInfo, experience, education, projects, certifications, skills } = req.body;
+    const {
+      title, templateId, personalInfo, experience, education, projects, certifications, skills,
+      links, coursework, training, publications, achievements, codingProfiles, extracurricularActivities, customData
+    } = req.body;
 
     const resume = await Resume.findById(req.params.id);
 
     if (resume && resume.userId.toString() === (req as any).user._id.toString()) {
       resume.title = title || resume.title;
+      if (templateId) resume.templateId = templateId;
       if (personalInfo) resume.personalInfo = personalInfo;
       if (experience) resume.experience = experience;
       if (education) resume.education = education;
       if (projects) resume.projects = projects;
       if (certifications) resume.certifications = certifications;
       if (skills) resume.skills = skills;
+      if (links) (resume as any).links = links;
+      if (coursework) (resume as any).coursework = coursework;
+      if (training) (resume as any).training = training;
+      if (publications) (resume as any).publications = publications;
+      if (achievements) (resume as any).achievements = achievements;
+      if (codingProfiles) (resume as any).codingProfiles = codingProfiles;
+      if (extracurricularActivities) (resume as any).extracurricularActivities = extracurricularActivities;
+      if (customData) resume.customData = customData;
 
       const updatedResume = await resume.save();
       res.json(updatedResume);

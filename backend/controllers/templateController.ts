@@ -55,7 +55,37 @@ export const getTemplates = async (req: Request, res: Response) => {
 
 export const getActiveTemplates = async (req: Request, res: Response) => {
   try {
-    const templates = await Template.find({ isActive: true });
+    let templates = await Template.find({ isActive: true });
+    if (templates.length === 0) {
+      const demoTemplate = await Template.create({
+        name: 'Demo Template',
+        description: 'Auto-generated starter template for quick testing.',
+        structureConfig: { colors: { primary: '#2563eb' } },
+        htmlTemplate: '',
+        latexTemplate: `
+\\documentclass[10pt]{article}
+\\usepackage[a4paper,margin=0.7in]{geometry}
+\\begin{document}
+\\begin{center}
+{\\LARGE \\textbf{[[fullName]]}}\\\\
+[[email]] \\quad [[phone]] \\quad [[address]]
+\\end{center}
+\\vspace{8pt}
+\\textbf{Summary}\\\\
+[[summary]]
+\\vspace{8pt}
+\\textbf{Experience}\\\\
+[[#experience]]
+\\textbf{[[company]]} -- [[role]] [[duration]]\\\\
+[[description]]\\\\
+[[/experience]]
+\\end{document}
+        `,
+        detectedFields: ['experience', 'education', 'projects', 'skills', 'summary', 'fullName', 'email', 'phone', 'address', 'links', 'publications', 'achievements', 'codingProfiles', 'extracurricularActivities'],
+        isActive: true
+      });
+      templates = [demoTemplate];
+    }
     res.status(200).json(templates);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching active templates' });

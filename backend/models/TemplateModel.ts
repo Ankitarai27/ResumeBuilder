@@ -10,7 +10,7 @@ export interface ITemplate extends Document {
   htmlTemplate?: string;
   detectedFields: string[];
   isActive: boolean;
-  createdBy: mongoose.Schema.Types.ObjectId;
+  createdBy?: mongoose.Schema.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,7 +26,7 @@ const TemplateSchema: Schema = new Schema(
     htmlTemplate: { type: String, default: '' },
     detectedFields: [{ type: String }],
     isActive: { type: Boolean, default: true },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
   },
   { timestamps: true }
 );

@@ -30,6 +30,33 @@ const STANDARD_FIELDS = new Set([
   'position','category','items','label','url','text','organization',
 ]);
 
+const DEMO_TEMPLATE = {
+  _id: '000000000000000000000001',
+  name: 'Demo Template',
+  description: 'Starter template for testing save/download when no templates are configured.',
+  structureConfig: { colors: { primary: '#2563eb' } },
+  detectedFields: ['experience', 'education', 'projects', 'skills', 'links', 'publications', 'achievements', 'codingProfiles', 'extracurricularActivities'],
+  htmlTemplate: ''
+};
+
+const INITIAL_RESUME_DATA = {
+  title: 'New Resume',
+  personalInfo: { fullName: '', email: '', phone: '', address: '', summary: '', github: '', linkedin: '', portfolio: '' },
+  experience:      [{ company: '', role: '', position: '', duration: '', startDate: '', endDate: '', location: '', description: '', points: [] }],
+  education:       [{ institution: '', degree: '', details: '', startDate: '', endDate: '' }],
+  projects:        [{ title: '', name: '', tech: '', link: '', demoLink: '', githubLink: '', duration: '', timeline: '', organization: '', description: '', points: [] }],
+  certifications:  [{ title: '', issuer: '', date: '' }],
+  skills:          [],
+  links:           [{ label: '', url: '', text: '' }],
+  coursework:      [{ title: '', items: [] }],
+  training:        [{ title: '', location: '', description: '' }],
+  publications:    [{ title: '', description: '' }],
+  achievements:    [{ title: '', points: [] }],
+  codingProfiles:  [{ title: '', url: '', details: '' }],
+  extracurricularActivities: [{ title: '', description: '' }],
+  customData:      {}
+};
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 const Builder = () => {
@@ -44,20 +71,7 @@ const Builder = () => {
   const [downloadingLatex, setDownloadingLatex] = useState(false);
   const [activeTab, setActiveTab]   = useState('info');
 
-  const [resumeData, setResumeData] = useState<any>({
-    title: 'New Resume',
-    personalInfo: { fullName: '', email: '', phone: '', address: '', summary: '', github: '', linkedin: '', portfolio: '' },
-    experience:      [{ company: '', role: '', position: '', duration: '', startDate: '', endDate: '', location: '', description: '', points: [] }],
-    education:       [{ institution: '', degree: '', details: '', startDate: '', endDate: '' }],
-    projects:        [{ title: '', name: '', tech: '', link: '', duration: '', organization: '', description: '' }],
-    certifications:  [{ title: '', issuer: '', date: '' }],
-    skills:          [],
-    links:           [{ label: '', url: '', text: '' }],
-    coursework:      [{ title: '', items: [] }],
-    training:        [{ title: '', location: '', description: '' }],
-    publications:    [{ title: '', description: '' }],
-    customData:      {}
-  });
+  const [resumeData, setResumeData] = useState<any>(INITIAL_RESUME_DATA);
 
   // ── Data Fetching ────────────────────────────────────────────────────────────
   useEffect(() => { fetchData(); }, [id]);
@@ -65,31 +79,49 @@ const Builder = () => {
   const fetchData = async () => {
     try {
       const { data: tpls } = await api.get('/templates/active');
-      setTemplates(tpls);
+      const usableTemplates = tpls.length > 0 ? tpls : [DEMO_TEMPLATE];
+      setTemplates(usableTemplates);
       if (id) {
         const { data: res } = await api.get(`/resumes/${id}`);
-        setResumeData(res);
-        setSelectedTemplate(res.templateId);
-      } else if (tpls.length > 0) {
-        setSelectedTemplate(tpls[0]);
+        setResumeData({ ...INITIAL_RESUME_DATA, ...res, personalInfo: { ...INITIAL_RESUME_DATA.personalInfo, ...(res.personalInfo || {}) } });
+        setSelectedTemplate(res.templateId || usableTemplates[0]);
+      } else {
+        setSelectedTemplate(usableTemplates[0]);
       }
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
 
   // ── Save ─────────────────────────────────────────────────────────────────────
+  const getSelectedTemplateId = () => {
+    if (!selectedTemplate) return resumeData.templateId?._id || resumeData.templateId || '';
+    if (typeof selectedTemplate === 'string') return selectedTemplate;
+    return selectedTemplate._id || '';
+  };
+
+  const persistResume = async () => {
+    const templateId = getSelectedTemplateId();
+    if (!templateId) {
+      throw new Error('Please select a template before saving.');
+    }
+
+    const payload = { ...resumeData, templateId };
+    if (id) {
+      const { data } = await api.put(`/resumes/${id}`, payload);
+      return data._id || id;
+    }
+
+    const { data } = await api.post('/resumes', payload);
+    navigate(`/builder/${data._id}`);
+    return data._id;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      const payload = { ...resumeData, templateId: selectedTemplate?._id };
-      if (id) {
-        await api.put(`/resumes/${id}`, payload);
-      } else {
-        const { data } = await api.post('/resumes', payload);
-        navigate(`/builder/${data._id}`);
-      }
+      await persistResume();
       alert('Resume saved successfully!');
-    } catch (err) { alert('Failed to save resume'); }
+    } catch (err: any) { alert(err.message || 'Failed to save resume'); }
     finally { setSaving(false); }
   };
 
@@ -97,10 +129,10 @@ const Builder = () => {
   const handlePrint = useReactToPrint({ contentRef: printRef });
 
   const handleLatexDownload = async () => {
-    if (!id) { alert('Please save your resume first.'); return; }
     setDownloadingLatex(true);
     try {
-      const response = await api.get(`/resumes/${id}/pdf`, { responseType: 'blob' });
+      const resumeId = id || await persistResume();
+      const response = await api.get(`/resumes/${resumeId}/pdf`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -145,6 +177,9 @@ const Builder = () => {
     { id: 'cwork', label: 'Coursework',   icon: <BookOpen size={16}/>,     section: 'coursework' },
     { id: 'train', label: 'Training',     icon: <Dumbbell size={16}/>,     section: 'training' },
     { id: 'pub',   label: 'Publications', icon: <FileText size={16}/>,     section: 'publications' },
+    { id: 'ach',   label: 'Achievements', icon: <Award size={16}/>,        section: 'achievements' },
+    { id: 'code',  label: 'Coding',       icon: <Link size={16}/>,         section: 'codingProfiles' },
+    { id: 'extra', label: 'Activities',   icon: <Dumbbell size={16}/>,     section: 'extracurricularActivities' },
     { id: 'tpl',   label: 'Style',        icon: <LayoutIcon size={16}/>,   always: true },
   ];
 
@@ -185,10 +220,10 @@ const Builder = () => {
   );
 
   return (
-    <div className="min-h-screen lg:h-screen flex flex-col bg-slate-50 overflow-hidden">
+    <div className="min-h-screen lg:h-screen flex flex-col bg-slate-50 overflow-x-hidden">
       {/* ── Header ── */}
-      <header className="bg-white border-b px-3 sm:px-6 py-3 sm:py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shadow-sm z-50">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+      <header className="bg-white border-b px-2.5 sm:px-4 lg:px-6 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 shadow-sm z-50">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 basis-[340px]">
           <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-slate-50 rounded-xl transition-colors shrink-0">
             <ChevronLeft />
           </button>
@@ -196,44 +231,44 @@ const Builder = () => {
           <input
             value={resumeData.title}
             onChange={(e) => setResumeData({ ...resumeData, title: e.target.value })}
-            className="text-base sm:text-xl font-bold text-slate-800 bg-transparent border-none outline-none focus:ring-2 ring-blue-100 px-2 rounded-lg min-w-0 w-full"
+            className="text-sm min-[480px]:text-base sm:text-lg md:text-xl font-bold text-slate-800 bg-transparent border-none outline-none focus:ring-2 ring-blue-100 px-2 rounded-lg min-w-0 w-full"
           />
         </div>
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className="flex items-center justify-center min-[1100px]:justify-end gap-2 sm:gap-3 w-full min-[1100px]:w-auto flex-wrap min-[1100px]:flex-nowrap">
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 disabled:opacity-50 transition-all border border-blue-100 text-sm">
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 lg:px-5 py-2.5 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 disabled:opacity-50 transition-all border border-blue-100 text-xs min-[480px]:text-sm min-[900px]:min-w-[110px] min-[520px]:flex-1 min-[900px]:flex-none">
             {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} Save
           </button>
           <button onClick={handlePrint}
-            className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-sm">
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 lg:px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs min-[480px]:text-sm min-[900px]:min-w-[110px] min-[520px]:flex-1 min-[900px]:flex-none">
             <Download size={18} /> HTML
           </button>
           <button onClick={handleLatexDownload} disabled={downloadingLatex}
-            className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all disabled:opacity-70 text-sm">
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 lg:px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all disabled:opacity-70 text-xs min-[480px]:text-sm min-[900px]:min-w-[130px] min-[520px]:flex-1 min-[900px]:flex-none">
             {downloadingLatex ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
             {downloadingLatex ? 'Compiling…' : 'LaTeX PDF'}
           </button>
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
         {/* ── Sidebar ── */}
-        <aside className="w-full lg:w-[500px] bg-white border-r flex flex-col lg:h-full z-40 max-h-[56vh] lg:max-h-none">
+        <aside className="w-full max-w-4xl mx-auto lg:mx-0 lg:max-w-none lg:w-[500px] xl:w-[540px] bg-white border-r flex flex-col lg:h-full z-40 max-h-[58vh] lg:max-h-none min-h-0">
 
           {/* Tab bar — scrollable, only shows relevant tabs */}
-          <div className="flex p-2 bg-slate-50 m-4 rounded-2xl gap-1 overflow-x-auto whitespace-nowrap scrollbar-hide">
+          <div className="grid grid-cols-2 min-[520px]:flex min-[520px]:justify-center p-2 bg-slate-50 m-3 sm:m-4 rounded-2xl gap-2 min-[520px]:gap-1 min-[520px]:overflow-x-auto min-[520px]:whitespace-nowrap">
             {visibleTabs.map(t => (
               <TabButton key={t.id} active={activeTab === t.id} onClick={() => setActiveTab(t.id)} icon={t.icon} label={t.label} />
             ))}
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-10 sm:pb-20 space-y-8 scroll-smooth">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-6 lg:px-8 pb-10 sm:pb-20 space-y-8 scroll-smooth">
 
             {/* ── INFO ── */}
             {activeTab === 'info' && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
                 <SectionHeader icon={<User className="text-blue-600" />} title="Personal Details" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField label="Full Name"  value={resumeData.personalInfo.fullName}  onChange={v => updatePersonalInfo('fullName', v)} />
                   <FormField label="Email"       value={resumeData.personalInfo.email}     onChange={v => updatePersonalInfo('email', v)} />
                   <FormField label="Phone"       value={resumeData.personalInfo.phone}     onChange={v => updatePersonalInfo('phone', v)} />
@@ -253,7 +288,7 @@ const Builder = () => {
 
                 <div className="space-y-4 pt-4 border-t border-slate-100">
                   <SectionHeader title="Social & Web" />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField label="GitHub"   value={resumeData.personalInfo.github}   onChange={v => updatePersonalInfo('github', v)} />
                     <FormField label="LinkedIn" value={resumeData.personalInfo.linkedin} onChange={v => updatePersonalInfo('linkedin', v)} />
                   </div>
@@ -281,15 +316,24 @@ const Builder = () => {
                 {resumeData.experience.map((exp: any, idx: number) => (
                   <ItemCard key={idx} onRemove={() => removeItem('experience', idx)}>
                     <FormField label="Company"   value={exp.company}   onChange={v => updateItem('experience', idx, 'company', v)} />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <FormField label="Role / Position" value={exp.role || exp.position} onChange={v => { updateItem('experience', idx, 'role', v); updateItem('experience', idx, 'position', v); }} />
                       <FormField label="Location"  value={exp.location}  onChange={v => updateItem('experience', idx, 'location', v)} />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <FormField label="Start Date" value={exp.startDate} placeholder="Jan 2022" onChange={v => { updateItem('experience', idx, 'startDate', v); updateItem('experience', idx, 'duration', `${v} – ${exp.endDate || 'Present'}`); }} />
                       <FormField label="End Date"   value={exp.endDate}   placeholder="Present"  onChange={v => { updateItem('experience', idx, 'endDate', v); updateItem('experience', idx, 'duration', `${exp.startDate || ''} – ${v}`); }} />
                     </div>
-                    <TextArea label="Description / Points" value={exp.description} onChange={v => updateItem('experience', idx, 'description', v)} />
+                    <TextArea label="Description" value={exp.description} onChange={v => updateItem('experience', idx, 'description', v)} />
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter ml-1">Experience Points (one per line)</label>
+                      <textarea
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none min-h-[90px]"
+                        value={(exp.points || []).join('\n')}
+                        onChange={e => updateItem('experience', idx, 'points', e.target.value.split('\n').filter(Boolean))}
+                        placeholder="Built feature X&#10;Improved performance by 30%"
+                      />
+                    </div>
                   </ItemCard>
                 ))}
                 <AddButton label="Add Position" onClick={() => addItem('experience', { company: '', role: '', position: '', duration: '', startDate: '', endDate: '', location: '', description: '', points: [] })} />
@@ -305,7 +349,7 @@ const Builder = () => {
                     <FormField label="Institution" value={edu.institution} onChange={v => updateItem('education', idx, 'institution', v)} />
                     <FormField label="Degree"      value={edu.degree}      onChange={v => updateItem('education', idx, 'degree', v)} />
                     <FormField label="Details / GPA / Location" value={edu.details} onChange={v => updateItem('education', idx, 'details', v)} />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <FormField label="Start Date" value={edu.startDate} onChange={v => updateItem('education', idx, 'startDate', v)} />
                       <FormField label="End Date"   value={edu.endDate}   onChange={v => updateItem('education', idx, 'endDate', v)} />
                     </div>
@@ -323,13 +367,23 @@ const Builder = () => {
                   <ItemCard key={idx} onRemove={() => removeItem('projects', idx)}>
                     <FormField label="Title / Name"   value={proj.title || proj.name} onChange={v => { updateItem('projects', idx, 'title', v); updateItem('projects', idx, 'name', v); }} />
                     <FormField label="Technologies"   value={proj.tech}               onChange={v => updateItem('projects', idx, 'tech', v)} placeholder="React, Node.js…" />
-                    <FormField label="Duration"       value={proj.duration}           onChange={v => updateItem('projects', idx, 'duration', v)} />
+                    <FormField label="Timeline"       value={proj.timeline || proj.duration} onChange={v => { updateItem('projects', idx, 'timeline', v); updateItem('projects', idx, 'duration', v); }} />
                     <FormField label="Organization"   value={proj.organization}       onChange={v => updateItem('projects', idx, 'organization', v)} />
-                    <FormField label="Link"           value={proj.link}               onChange={v => updateItem('projects', idx, 'link', v)} placeholder="https://…" />
+                    <FormField label="Demo Link"      value={proj.demoLink || proj.link} onChange={v => { updateItem('projects', idx, 'demoLink', v); updateItem('projects', idx, 'link', v); }} placeholder="https://…" />
+                    <FormField label="GitHub Link"    value={proj.githubLink}         onChange={v => updateItem('projects', idx, 'githubLink', v)} placeholder="https://github.com/…" />
                     <TextArea  label="Description"    value={proj.description}        onChange={v => updateItem('projects', idx, 'description', v)} />
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter ml-1">Project Points (one per line)</label>
+                      <textarea
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none min-h-[90px]"
+                        value={(proj.points || []).join('\n')}
+                        onChange={e => updateItem('projects', idx, 'points', e.target.value.split('\n').filter(Boolean))}
+                        placeholder="Implemented authentication&#10;Added CI/CD"
+                      />
+                    </div>
                   </ItemCard>
                 ))}
-                <AddButton label="Add Project" onClick={() => addItem('projects', { title: '', name: '', tech: '', link: '', duration: '', organization: '', description: '' })} />
+                <AddButton label="Add Project" onClick={() => addItem('projects', { title: '', name: '', tech: '', link: '', demoLink: '', githubLink: '', duration: '', timeline: '', organization: '', description: '', points: [] })} />
               </motion.div>
             )}
 
@@ -414,6 +468,57 @@ const Builder = () => {
               </motion.div>
             )}
 
+            {/* ── ACHIEVEMENTS ── */}
+            {activeTab === 'ach' && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <SectionHeader icon={<Award className="text-blue-600" />} title="Achievements" />
+                {(resumeData.achievements || []).map((ach: any, idx: number) => (
+                  <ItemCard key={idx} onRemove={() => removeItem('achievements', idx)}>
+                    <FormField label="Achievement Title" value={ach.title} onChange={v => updateItem('achievements', idx, 'title', v)} />
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter ml-1">Points (one per line)</label>
+                      <textarea
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm outline-none min-h-[90px]"
+                        value={(ach.points || []).join('\n')}
+                        onChange={e => updateItem('achievements', idx, 'points', e.target.value.split('\n').filter(Boolean))}
+                        placeholder="Won 1st place in hackathon"
+                      />
+                    </div>
+                  </ItemCard>
+                ))}
+                <AddButton label="Add Achievement" onClick={() => addItem('achievements', { title: '', points: [] })} />
+              </motion.div>
+            )}
+
+            {/* ── CODING PROFILES ── */}
+            {activeTab === 'code' && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <SectionHeader icon={<Link className="text-blue-600" />} title="Coding Profiles" />
+                {(resumeData.codingProfiles || []).map((cp: any, idx: number) => (
+                  <ItemCard key={idx} onRemove={() => removeItem('codingProfiles', idx)}>
+                    <FormField label="Platform" value={cp.title} onChange={v => updateItem('codingProfiles', idx, 'title', v)} placeholder="LeetCode / Codeforces" />
+                    <FormField label="Profile URL" value={cp.url} onChange={v => updateItem('codingProfiles', idx, 'url', v)} placeholder="https://..." />
+                    <TextArea label="Details" value={cp.details} onChange={v => updateItem('codingProfiles', idx, 'details', v)} />
+                  </ItemCard>
+                ))}
+                <AddButton label="Add Coding Profile" onClick={() => addItem('codingProfiles', { title: '', url: '', details: '' })} />
+              </motion.div>
+            )}
+
+            {/* ── EXTRA CURRICULAR ── */}
+            {activeTab === 'extra' && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <SectionHeader icon={<Dumbbell className="text-blue-600" />} title="Extra Curricular Activities" />
+                {(resumeData.extracurricularActivities || []).map((ex: any, idx: number) => (
+                  <ItemCard key={idx} onRemove={() => removeItem('extracurricularActivities', idx)}>
+                    <FormField label="Activity" value={ex.title} onChange={v => updateItem('extracurricularActivities', idx, 'title', v)} />
+                    <TextArea label="Description" value={ex.description} onChange={v => updateItem('extracurricularActivities', idx, 'description', v)} />
+                  </ItemCard>
+                ))}
+                <AddButton label="Add Activity" onClick={() => addItem('extracurricularActivities', { title: '', description: '' })} />
+              </motion.div>
+            )}
+
             {/* ── STYLE / TEMPLATE PICKER ── */}
             {activeTab === 'tpl' && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -478,8 +583,8 @@ const Builder = () => {
         </aside>
 
         {/* ── Preview ── */}
-        <main className="flex-1 bg-slate-200 overflow-y-auto p-3 sm:p-6 lg:p-12 xl:p-20 flex justify-center custom-scrollbar">
-          <div className="w-full max-w-[850px] bg-white shadow-2xl origin-top h-fit">
+        <main className="flex-1 min-h-0 bg-slate-200 overflow-y-auto overflow-x-hidden p-2.5 sm:p-4 lg:p-8 xl:p-12 flex justify-center custom-scrollbar">
+          <div className="w-full max-w-[850px] bg-white shadow-2xl origin-top h-fit overflow-hidden">
             <div ref={printRef}>
               <TemplateRenderer
                 data={renderData}
@@ -531,7 +636,7 @@ type AddButtonProps = {
 
 const TabButton = ({ active, onClick, icon, label }: TabButtonProps) => (
   <button onClick={onClick}
-    className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-xs transition-all ${active ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+    className={`w-full min-[520px]:w-auto flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2.5 rounded-xl font-bold text-[11px] sm:text-xs transition-all ${active ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
     {icon} {label}
   </button>
 );
