@@ -70,7 +70,7 @@ Admins upload LaTeX templates with `[[ variable ]]` placeholders. The system aut
 
 ```mermaid
 flowchart TD
-    A[🛠️ Admin uploads LaTeX source] --> B[🔎 Backend parses [[ variable ]] tags]
+    A[🛠️ Admin uploads LaTeX source] --> B[🔎 Backend parses placeholder tags]
     B --> C[🧾 detectedFields[] generated]
     C --> D[🧩 Builder UI renders only matching tabs/inputs]
     D --> E[👤 User fills data]
@@ -271,7 +271,7 @@ Use `[[ variableName ]]` for simple fields and `[[ #sectionName ]]` / `[[ /secti
 
 ```mermaid
 flowchart TD
-    T1[Template source uploaded] --> T2[Regex parse [[...]] blocks]
+    T1[Template source uploaded] --> T2[Regex parse placeholder blocks]
     T2 --> T3[Extract fields + sections]
     T3 --> T4[Store detectedFields in TemplateModel]
     T4 --> T5[Builder conditionally renders tabs/inputs]
