@@ -185,40 +185,40 @@ const Builder = () => {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
+    <div className="min-h-screen lg:h-screen flex flex-col bg-slate-50 overflow-hidden">
       {/* ── Header ── */}
-      <header className="bg-white border-b px-6 py-4 flex items-center justify-between shadow-sm z-50">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
+      <header className="bg-white border-b px-3 sm:px-6 py-3 sm:py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shadow-sm z-50">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-slate-50 rounded-xl transition-colors shrink-0">
             <ChevronLeft />
           </button>
-          <div className="h-8 w-[1px] bg-slate-200 mx-2" />
+          <div className="h-8 w-[1px] bg-slate-200 mx-1 sm:mx-2 shrink-0" />
           <input
             value={resumeData.title}
             onChange={(e) => setResumeData({ ...resumeData, title: e.target.value })}
-            className="text-xl font-bold text-slate-800 bg-transparent border-none outline-none focus:ring-2 ring-blue-100 px-2 rounded-lg"
+            className="text-base sm:text-xl font-bold text-slate-800 bg-transparent border-none outline-none focus:ring-2 ring-blue-100 px-2 rounded-lg min-w-0 w-full"
           />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-2 px-6 py-2.5 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 disabled:opacity-50 transition-all border border-blue-100">
+            className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 disabled:opacity-50 transition-all border border-blue-100 text-sm">
             {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} Save
           </button>
           <button onClick={handlePrint}
-            className="flex items-center gap-2 px-6 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all">
+            className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-sm">
             <Download size={18} /> HTML
           </button>
           <button onClick={handleLatexDownload} disabled={downloadingLatex}
-            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all disabled:opacity-70">
+            className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all disabled:opacity-70 text-sm">
             {downloadingLatex ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
             {downloadingLatex ? 'Compiling…' : 'LaTeX PDF'}
           </button>
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* ── Sidebar ── */}
-        <aside className="w-[500px] bg-white border-r flex flex-col h-full z-40">
+        <aside className="w-full lg:w-[500px] bg-white border-r flex flex-col lg:h-full z-40 max-h-[56vh] lg:max-h-none">
 
           {/* Tab bar — scrollable, only shows relevant tabs */}
           <div className="flex p-2 bg-slate-50 m-4 rounded-2xl gap-1 overflow-x-auto whitespace-nowrap scrollbar-hide">
@@ -227,13 +227,13 @@ const Builder = () => {
             ))}
           </div>
 
-          <div className="flex-1 overflow-y-auto px-8 pb-20 space-y-8 scroll-smooth">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-10 sm:pb-20 space-y-8 scroll-smooth">
 
             {/* ── INFO ── */}
             {activeTab === 'info' && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
                 <SectionHeader icon={<User className="text-blue-600" />} title="Personal Details" />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField label="Full Name"  value={resumeData.personalInfo.fullName}  onChange={v => updatePersonalInfo('fullName', v)} />
                   <FormField label="Email"       value={resumeData.personalInfo.email}     onChange={v => updatePersonalInfo('email', v)} />
                   <FormField label="Phone"       value={resumeData.personalInfo.phone}     onChange={v => updatePersonalInfo('phone', v)} />
@@ -253,7 +253,7 @@ const Builder = () => {
 
                 <div className="space-y-4 pt-4 border-t border-slate-100">
                   <SectionHeader title="Social & Web" />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField label="GitHub"   value={resumeData.personalInfo.github}   onChange={v => updatePersonalInfo('github', v)} />
                     <FormField label="LinkedIn" value={resumeData.personalInfo.linkedin} onChange={v => updatePersonalInfo('linkedin', v)} />
                   </div>
@@ -264,7 +264,7 @@ const Builder = () => {
                   <div className="space-y-4 pt-4 border-t border-slate-100">
                     <SectionHeader icon={<Sparkles size={16} className="text-blue-600" />} title={`${selectedTemplate.name} — Extra Fields`} />
                     <p className="text-[10px] text-slate-400 -mt-2">These fields are unique to this template.</p>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {customFields.map((f: string) => (
                         <FormField key={f} label={f} value={getCustomField(f)} onChange={v => updateCustomField(f, v)} />
                       ))}
@@ -281,11 +281,11 @@ const Builder = () => {
                 {resumeData.experience.map((exp: any, idx: number) => (
                   <ItemCard key={idx} onRemove={() => removeItem('experience', idx)}>
                     <FormField label="Company"   value={exp.company}   onChange={v => updateItem('experience', idx, 'company', v)} />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <FormField label="Role / Position" value={exp.role || exp.position} onChange={v => { updateItem('experience', idx, 'role', v); updateItem('experience', idx, 'position', v); }} />
                       <FormField label="Location"  value={exp.location}  onChange={v => updateItem('experience', idx, 'location', v)} />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <FormField label="Start Date" value={exp.startDate} placeholder="Jan 2022" onChange={v => { updateItem('experience', idx, 'startDate', v); updateItem('experience', idx, 'duration', `${v} – ${exp.endDate || 'Present'}`); }} />
                       <FormField label="End Date"   value={exp.endDate}   placeholder="Present"  onChange={v => { updateItem('experience', idx, 'endDate', v); updateItem('experience', idx, 'duration', `${exp.startDate || ''} – ${v}`); }} />
                     </div>
@@ -305,7 +305,7 @@ const Builder = () => {
                     <FormField label="Institution" value={edu.institution} onChange={v => updateItem('education', idx, 'institution', v)} />
                     <FormField label="Degree"      value={edu.degree}      onChange={v => updateItem('education', idx, 'degree', v)} />
                     <FormField label="Details / GPA / Location" value={edu.details} onChange={v => updateItem('education', idx, 'details', v)} />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <FormField label="Start Date" value={edu.startDate} onChange={v => updateItem('education', idx, 'startDate', v)} />
                       <FormField label="End Date"   value={edu.endDate}   onChange={v => updateItem('education', idx, 'endDate', v)} />
                     </div>
@@ -478,8 +478,8 @@ const Builder = () => {
         </aside>
 
         {/* ── Preview ── */}
-        <main className="flex-1 bg-slate-200 overflow-y-auto p-20 flex justify-center custom-scrollbar">
-          <div className="w-[850px] bg-white shadow-2xl origin-top h-fit">
+        <main className="flex-1 bg-slate-200 overflow-y-auto p-3 sm:p-6 lg:p-12 xl:p-20 flex justify-center custom-scrollbar">
+          <div className="w-full max-w-[850px] bg-white shadow-2xl origin-top h-fit">
             <div ref={printRef}>
               <TemplateRenderer
                 data={renderData}
