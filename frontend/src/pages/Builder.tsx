@@ -78,18 +78,35 @@ const Builder = () => {
   };
 
   // ── Save ─────────────────────────────────────────────────────────────────────
+  const getSelectedTemplateId = () => {
+    if (!selectedTemplate) return resumeData.templateId?._id || resumeData.templateId || '';
+    if (typeof selectedTemplate === 'string') return selectedTemplate;
+    return selectedTemplate._id || '';
+  };
+
+  const persistResume = async () => {
+    const templateId = getSelectedTemplateId();
+    if (!templateId) {
+      throw new Error('Please select a template before saving.');
+    }
+
+    const payload = { ...resumeData, templateId };
+    if (id) {
+      const { data } = await api.put(`/resumes/${id}`, payload);
+      return data._id || id;
+    }
+
+    const { data } = await api.post('/resumes', payload);
+    navigate(`/builder/${data._id}`);
+    return data._id;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      const payload = { ...resumeData, templateId: selectedTemplate?._id };
-      if (id) {
-        await api.put(`/resumes/${id}`, payload);
-      } else {
-        const { data } = await api.post('/resumes', payload);
-        navigate(`/builder/${data._id}`);
-      }
+      await persistResume();
       alert('Resume saved successfully!');
-    } catch (err) { alert('Failed to save resume'); }
+    } catch (err: any) { alert(err.message || 'Failed to save resume'); }
     finally { setSaving(false); }
   };
 
@@ -97,10 +114,10 @@ const Builder = () => {
   const handlePrint = useReactToPrint({ contentRef: printRef });
 
   const handleLatexDownload = async () => {
-    if (!id) { alert('Please save your resume first.'); return; }
     setDownloadingLatex(true);
     try {
-      const response = await api.get(`/resumes/${id}/pdf`, { responseType: 'blob' });
+      const resumeId = id || await persistResume();
+      const response = await api.get(`/resumes/${resumeId}/pdf`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
